@@ -1,6 +1,6 @@
 package com.digis01.HAriasProgramacionNCapasClientJPACajero.Controller;
 
-import java.util.Map;
+import com.digis01.HAriasProgramacionNCapasClientJPACajero.ML.Result;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -33,16 +33,16 @@ public class CajeroController {
     }
     
     @PostMapping("/retirar")
-    public String retirarEfectivo(@RequestParam("monto") double monto, Model model){
+    public String retirarEfectivo(@RequestParam double monto, Model model){
         try {
-            ResponseEntity<Map<Double,Integer>> responseRetirar = restTemplate.exchange(END_POINT_BASE+"/retirar"
-                    , HttpMethod.POST, 
-                    new HttpEntity<>(monto),
-                    new ParameterizedTypeReference<Map<Double, Integer>>(){});
+            HttpEntity<?> entityRetirar = new HttpEntity<>(monto);
+            restTemplate.exchange(END_POINT_BASE+"/retirar?monto="+monto, 
+                    HttpMethod.POST, entityRetirar, 
+                    new ParameterizedTypeReference<Result>(){});
         } catch (Exception e) {
         }
         
-        return " Cajero";
+        return "Cajero";
     }
 
 }
