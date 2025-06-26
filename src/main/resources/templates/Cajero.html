@@ -12,23 +12,47 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this temp
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <script src="sweetalert2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <link rel="stylesheet" href="sweetalert2.min.css">
+        
         <style>
             body {
                 font-family: Arial, sans-serif;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                height: 100vh;
+                min-height: 100vh;
                 margin: 0;
                 background-color: #f3f4f6;
+                padding: 20px;
+            }
+
+            .atm-container {
+                display: flex;
+                gap: 20px;
+                max-width: 1200px;
+                width: 100%;
+                flex-wrap: wrap;
             }
 
             .calculator {
                 background: #ffffff;
                 border-radius: 10px;
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-                width: 500px;
+                width: 400px;
                 padding: 20px;
+                flex-shrink: 0;
+            }
+
+            .info-panel {
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                padding: 20px;
+                flex-grow: 1;
+                min-width: 300px;
             }
 
             .display {
@@ -60,47 +84,129 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this temp
             .btn:hover {
                 background: #d6d6d6;
             }
-            input{
+
+            .btn-operation {
+                background: #007bff;
+                color: white;
+            }
+
+            .btn-operation:hover {
+                background: #0056b3;
+            }
+
+            .btn-danger {
+                background: #dc3545;
+                color: white;
+            }
+
+            .btn-success {
+                background: #28a745;
+                color: white;
+            }
+
+            .btn-warning {
+                background: #ffc107;
+                color: black;
+            }
+
+            .saldo-display {
+                font-size: 1.5rem;
+                font-weight: bold;
+                margin-bottom: 20px;
+                padding: 10px;
                 background: #e9ecef;
                 border-radius: 5px;
-                padding: 15px;
-                font-size: 2rem;
-                text-align: right;
-                margin-bottom: 20px;
-                overflow: hidden;
+                text-align: center;
+            }
+
+            .denominaciones-table {
+                width: 100%;
+                margin-top: 20px;
+            }
+
+            .alert {
+                margin-top: 20px;
+            }
+
+            @media (max-width: 768px) {
+                .atm-container {
+                    flex-direction: column;
+                }
+
+                .calculator, .info-panel {
+                    width: 100%;
+                }
             }
 
 
         </style>
     </head>
     <body>
-        <div class="calculator">
-            <div >
-                <span>Saldo disponible</span>
-               <input th:value="${saldo}" disabled> 
+        <div class="atm-container">
+            <div class="calculator">
+                <div class="saldo-display">
+                    Saldo Disponible: $<span th:text="${saldo}"></span>
+                </div>
+                <div class="display" id="display">0</div>
+                <div class="buttons">
+                    <button class="btn" onclick="agregarValor('1')">1</button>
+                    <button class="btn" onclick="agregarValor('2')">2</button>
+                    <button class="btn" onclick="agregarValor('3')">3</button>
+                    <button class="btn btn-danger text-black">Cancel</button>
+                    <button class="btn" onclick="agregarValor('4')">4</button>
+                    <button class="btn" onclick="agregarValor('5')">5</button>
+                    <button class="btn" onclick="agregarValor('6')">6</button>
+                    <button class="btn btn-warning text-black" onclick="clearDisplay()">Clear</button>
+                    <button class="btn" onclick="agregarValor('7')">7</button>
+                    <button class="btn" onclick="agregarValor('8')">8</button>
+                    <button class="btn" onclick="agregarValor('9')">9</button>
+                    <button class="btn" onclick="deleteLast()"><i class="bi bi-backspace"></i></button>
+                    <button class="btn" onclick="agregarValor('.5')">0.5</button>
+                    <button class="btn" onclick="agregarValor('0')">0</button>
+                    <button class="btn" onclick="agregarValor('00')">00</button>
+                    <button class="btn btn-success text-black" onclick="realizarRetiro()">Enter</button>
+                </div>
+                <form id="retiroForm" th:action="@{/atm/retirar}" method="post" style="display: none;">
+                    <input type="hidden" name="monto" id="montoInput">
+                </form>
+                <div class="d-grid gap-2 mt-3">
+                    <button class="btn btn-primary btn-operation" onclick="reabastecer()">Reabastecer Cajero</button>
+                    <form id="reabastecerForm" th:action="@{/atm/rellenar}" method="post" style="display: none;"></form>
+                </div>
             </div>
-            
-            
-            <div class="display" id="display">0</div>
-            <div class="buttons">
-                <button class="btn" onclick="agregarValor('1')">1</button>
-                <button class="btn" onclick="agregarValor('2')">2</button>
-                <button class="btn" onclick="agregarValor('3')">3</button>
-                <button class="btn btn-danger text-black">Cancel</button>
-                <button class="btn" onclick="agregarValor('4')">4</button>
-                <button class="btn" onclick="agregarValor('5')">5</button>
-                <button class="btn" onclick="agregarValor('6')">6</button>
-                <button class="btn btn-warning text-black" onclick="clearDisplay()">Clear</button>
-                <button class="btn" onclick="agregarValor('7')">7</button>
-                <button class="btn" onclick="agregarValor('8')">8</button>
-                <button class="btn" onclick="agregarValor('9')">9</button>
-                <button class="btn"><i class="bi bi-backspace"></i></button>
-                <button class="btn" disabled></button>
-                <button class="btn" onclick="agregarValor('0')">0</button>
-                <button class="btn" onclick="agregarValor('00')">00</button>
-                <button class="btn btn-success text-black" >Enter</button>
+            <div class="info-panel">
+                <h3 class="text-center"> Detalles de cajero</h3>
+                <div th:if="${mensaje}" class="alert alert-success" th:text="${mensaje}"></div>
+
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+
+                <div th:if="${desglose}" class="mt-3">
+                    <h4>Desglose del retiro:</h4>
+                    <table class="table table-bordered denominaciones-table">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Denominación</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="entry : ${desglose.entrySet()}">
+                                <td th:text="${entry.key} + ' $'"></td>
+                                <td th:text="${entry.value}"></td>
+                                <td th:text="${entry.key * entry.value} + ' $'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
+
         </div>
+
+
+
         <script>
             let display = document.getElementById('display');
 
@@ -119,6 +225,30 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this temp
             function deleteLast() {
                 display.innerText = display.innerText.slice(0, -1) || '0';
             }
+
+            function realizarRetiro() {
+                const monto = parseFloat(display.innerText);
+                if (isNaN(monto)) {
+                    alert('Ingrese un monto válido');
+                    return;
+                }
+                document.getElementById('montoInput').value = monto;
+                document.getElementById('retiroForm').submit();
+            }
+            function reabastecer() {
+                if (confirm('¿Está seguro que desea reabastecer el cajero a sus valores máximos?')) {
+                    document.getElementById('reabastecerForm').submit();
+                }
+            }
+            
+        </script>
+        <script th:if="${error}">
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '[[${error}]]',
+                confirmButtonColor: '#d33'
+            });
         </script>
     </body>
 
