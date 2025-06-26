@@ -1,6 +1,5 @@
 package com.digis01.HAriasProgramacionNCapasClientJPACajero.Controller;
 
-import com.digis01.HAriasProgramacionNCapasClientJPACajero.ML.Result;
 import java.util.Map;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -40,7 +39,8 @@ public class CajeroController {
             model.addAttribute("saldo", responseSaldo.getBody());
 
         } catch (Exception e) {
-            model.addAttribute("error", "Error al acceder al api" + e.getLocalizedMessage());
+            String mainErrorMessage = extractMainErrorMessage(e);
+            model.addAttribute("error", "Error al acceder al api" + mainErrorMessage);
         }
 
         return "Cajero";
@@ -60,56 +60,75 @@ public class CajeroController {
                 model.addAttribute("mensaje", "Retiro exitoso");
             }
 
-             ResponseEntity<Double> responseSaldo = restTemplate.exchange(END_POINT_BASE + "/total",
-                    HttpMethod.GET,
-                    HttpEntity.EMPTY,
-                    new ParameterizedTypeReference<Double>() {
-            });
-            model.addAttribute("saldo", responseSaldo.getBody());
-        } catch (Exception e) {
             ResponseEntity<Double> responseSaldo = restTemplate.exchange(END_POINT_BASE + "/total",
                     HttpMethod.GET,
                     HttpEntity.EMPTY,
                     new ParameterizedTypeReference<Double>() {
             });
             model.addAttribute("saldo", responseSaldo.getBody());
-            model.addAttribute("error", e.getLocalizedMessage());
+        } catch (Exception e) {
+            String mainErrorMessage = extractMainErrorMessage(e);
+            ResponseEntity<Double> responseSaldo = restTemplate.exchange(END_POINT_BASE + "/total",
+                    HttpMethod.GET,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Double>() {
+            });
+            model.addAttribute("saldo", responseSaldo.getBody());
+            model.addAttribute("error", mainErrorMessage);
             return "Cajero";
         }
 
         return "Cajero";
     }
+
     @PostMapping("/rellenar")
-    public String rellenarCajero(Model model){
+    public String rellenarCajero(Model model) {
         try {
-            ResponseEntity<Map<Double, Integer>> responseRellenar = restTemplate.exchange(END_POINT_BASE+"/rellenar" 
-                    , HttpMethod.POST
-                    , HttpEntity.EMPTY, 
-                    new ParameterizedTypeReference<Map<Double, Integer>>(){});
+            ResponseEntity<Map<Double, Integer>> responseRellenar = restTemplate.exchange(END_POINT_BASE + "/rellenar",
+                    HttpMethod.POST,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Map<Double, Integer>>() {
+            });
             if (responseRellenar.getStatusCode().is2xxSuccessful()) {
                 Map<Double, Integer> resultado = responseRellenar.getBody();
-                if(resultado != null && !resultado.isEmpty()){
+                if (resultado != null && !resultado.isEmpty()) {
                     model.addAttribute("rellenar", resultado);
                     model.addAttribute("mensaje", "Cajero rebastecido");
-                }else{
+                } else {
                     model.addAttribute("mensaje", "El cajero ya se encuentra lleno");
                 }
             }
-            ResponseEntity<Double> responseTotal = restTemplate.exchange(END_POINT_BASE+"/total" 
-                    , HttpMethod.GET, 
-                    HttpEntity.EMPTY, 
-                    new ParameterizedTypeReference<Double>(){});
+            ResponseEntity<Double> responseTotal = restTemplate.exchange(END_POINT_BASE + "/total",
+                    HttpMethod.GET,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Double>() {
+            });
             model.addAttribute("saldo", responseTotal.getBody());
         } catch (Exception e) {
-            ResponseEntity<Double> responseTotal = restTemplate.exchange(END_POINT_BASE+"/total" 
-                    , HttpMethod.GET, 
-                    HttpEntity.EMPTY, 
-                    new ParameterizedTypeReference<Double>(){});
-            
+            String mainErrorMessage = extractMainErrorMessage(e);
+            ResponseEntity<Double> responseTotal = restTemplate.exchange(END_POINT_BASE + "/total",
+                    HttpMethod.GET,
+                    HttpEntity.EMPTY,
+                    new ParameterizedTypeReference<Double>() {
+            });
+
             model.addAttribute("saldo", responseTotal.getBody());
-            model.addAttribute("error", "Error al rellenar :"+e.getMessage());
+            model.addAttribute("error", mainErrorMessage);
         }
         return "Cajero";
+    }
+
+    private String extractMainErrorMessage(Exception e) {
+        String message = e.getMessage();
+
+      
+        message = message.replaceAll("http://[\\w.]+(:[\\d]+)?/[^ ]*", "");
+        if (message != null && message.contains("/")) {
+            int index = message.indexOf(":");
+            return message.substring(index + 1).trim();  
+        }
+
+        return message;
     }
 
 }
